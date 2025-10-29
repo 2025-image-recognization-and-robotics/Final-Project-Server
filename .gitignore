@@ -1,1 +1,38 @@
-.idea
+# Ignore IDE and project files
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs and runtime
+logs/
+*.log
+.DS_Store
+
+# Environment
+.env
+.env.*
+
+# Test/cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+Thumbs.db
+
