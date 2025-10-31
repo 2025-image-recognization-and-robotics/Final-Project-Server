@@ -14,10 +14,11 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
     def __init__(self, bus: EventBus) -> None:
         self._bus = bus
         self._task: Optional[asyncio.Task] = None
-        self._stop = asyncio.Event()
+        self._stopped = False
 
     async def __aenter__(self):
         self._bus.subscribe("safety/stop", self._on_stop)
+        self._bus.subscribe("safety/clear", self._on_clear)
         self._task = asyncio.create_task(self._run())
         return self
 
@@ -30,13 +31,17 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
                 pass
 
     async def _on_stop(self, event: Event):
+        self._stopped = True
         logger.warning(f"RandomWalk received stop: {event.payload}")
-        self._stop.set()
+
+    async def _on_clear(self, event: Event):
+        self._stopped = False
+        logger.warning(f"RandomWalk received clear: {event.payload}")
 
     async def _run(self):
         logger.info("RandomWalk started")
         try:
-            while not self._stop.is_set():
+            while not self._stopped:
                 # TODO: send random drive commands to JetBot controller
                 logger.info("RandomWalk: step")
                 await asyncio.sleep(0.5)
