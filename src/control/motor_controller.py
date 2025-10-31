@@ -49,4 +49,5 @@ class MotorController:
     # Hardware integration point
     def _apply_velocity(self, left: float, right: float) -> None:
         # TODO: call JetBot motor APIs here (e.g., set_motor_speeds(left, right))
-        logger.debug(f"Applying wheel speeds: left={left:.3f}, right={right:.3f}")
+        while not self._stopped:
+            logger.debug(f"Applying wheel speeds: left={left:.3f}, right={right:.3f}")
