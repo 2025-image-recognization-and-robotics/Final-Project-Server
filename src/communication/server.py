@@ -40,6 +40,7 @@ class ImageServer:
         logger.info(f"Client connected: {addr}")
         try:
             while True:
+                # TODO: implement real image protocol
                 # For now, read a length-prefixed blob: 4 bytes length + payload
                 header = await reader.readexactly(4)
                 length = int.from_bytes(header, 'big')
