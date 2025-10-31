@@ -38,8 +38,7 @@ async def run_app() -> None:
         try:
             loop.add_signal_handler(s, _signal_handler)
         except NotImplementedError:
-            # Windows without ProactorEventLoop can't set signal handlers; fallback
-            pass
+            print("Windows without ProactorEventLoop can't set signal handlers; fallback")
 
     async with AsyncExitStack() as stack:
         # Ensure the event bus dispatcher is running
