@@ -32,15 +32,9 @@ class CollisionAvoidanceDaemon(AbstractAsyncContextManager):
         logger.info("CollisionAvoidanceDaemon stopped")
 
     async def _on_image(self, event: Event):
-        # TODO: feed into a lightweight heuristic or depth model
-        # For now, no-op; in future, may publish 'safety/stop' when needed
+        # TODO: feed into a lightweight heuristic or depth model, may publish 'safety/stop'
         logger.debug("CollisionAvoidanceDaemon received image bytes: %d", len(event.payload.get("bytes", b"")))
 
     async def _run(self):
-        # Placeholder: periodically check conditions and publish stop if needed
-        while True:
-            await asyncio.sleep(1.0)
-            # Example: publish a heartbeat; replace with real logic
-            await self._bus.publish(Event(type="safety/heartbeat", payload={}))
-            # If imminent collision detected:
-            # await self._bus.publish(Event(type="safety/stop", payload={"reason": "collision"}))
+        #TODO: implement logic when safety/stop is published, should set 'safety/clear' in the end
+        pass
