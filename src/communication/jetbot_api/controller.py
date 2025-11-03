@@ -6,7 +6,7 @@ from src.core.logging import logger
 
 class Controller:
     def __init__(self, bus: EventBus) -> None:
-        #TODO set up jetbot api
+        #TODO set up jetbot api 謙
         self._bus = bus
 
     async def __aenter__(self) -> "Controller":
@@ -19,6 +19,6 @@ class Controller:
 
     # Hardware integration point
     def _apply_velocity(self, event: Event) -> None:
-        # TODO: call JetBot motor APIs here (e.g., set_motor_speeds(left, right))
+        # TODO: call JetBot motor APIs here (e.g., set_motor_speeds(left, right)) 謙
         if self._bus:
             pass
