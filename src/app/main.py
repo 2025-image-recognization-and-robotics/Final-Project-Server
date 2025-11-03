@@ -12,7 +12,7 @@ from src.core.config import AppConfig
 from src.core.logging import setup_logging, logger
 from src.core.events import EventBus
 from src.communication.image_receiver.server import ImageServer
-from src.behavior.random_walk import RandomWalkDaemon
+from src.random_walk.random_walk import RandomWalkDaemon
 from src.safety.collision_avoidance import CollisionAvoidanceDaemon
 
 
