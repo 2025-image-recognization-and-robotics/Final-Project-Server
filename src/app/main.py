@@ -7,6 +7,7 @@ import asyncio
 import signal
 from contextlib import AsyncExitStack
 
+from src.commander.motor_controller import Commander
 from src.communication.jetbot_api.controller import Controller
 from src.core.config import AppConfig
 from src.core.logging import setup_logging, logger
@@ -14,6 +15,7 @@ from src.core.events import EventBus
 from src.communication.image_receiver.server import ImageServer
 from src.random_walk.random_walk import RandomWalkDaemon
 from src.safety.collision_avoidance import CollisionAvoidanceDaemon
+from src.perception.yolo_inference import YoloInference
 
 
 async def run_app() -> None:
@@ -26,7 +28,8 @@ async def run_app() -> None:
     image_server = ImageServer(cfg, bus)
     random_walk = RandomWalkDaemon(bus)
     collision = CollisionAvoidanceDaemon(bus)
-    commander = Controller(bus)
+    yolo = YoloInference("",bus)
+    commander = Commander(bus, random_walk, collision, None)
 
     # Cooperative shutdown handling
     stop_event = asyncio.Event()

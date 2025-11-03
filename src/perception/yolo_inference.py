@@ -18,7 +18,7 @@ class Detection:
 class YoloInference(AbstractAsyncContextManager):
     """Placeholder YOLO inference interface."""
 
-    def __init__(self, model_path: str, bus: EventBus, device: str = "cpu") -> None:
+    def __init__(self, model_path: str, bus: EventBus, device: str = "gpu") -> None:
         self.model_path = model_path
         self.device = device
         self._bus = bus
