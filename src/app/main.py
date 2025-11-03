@@ -7,6 +7,7 @@ import asyncio
 import signal
 from contextlib import AsyncExitStack
 
+from src.communication.jetbot_api.commander import Commander
 from src.core.config import AppConfig
 from src.core.logging import setup_logging, logger
 from src.core.events import EventBus
@@ -25,6 +26,7 @@ async def run_app() -> None:
     image_server = ImageServer(cfg, bus)
     random_walk = RandomWalkDaemon(bus)
     collision = CollisionAvoidanceDaemon(bus)
+    commander = Commander(bus)
 
     # Cooperative shutdown handling
     stop_event = asyncio.Event()
@@ -46,6 +48,7 @@ async def run_app() -> None:
         await stack.enter_async_context(image_server)
         await stack.enter_async_context(collision)
         await stack.enter_async_context(random_walk)
+        await stack.enter_async_context(commander)
 
         logger.info("Services started; awaiting stop event")
         await stop_event.wait()

@@ -4,12 +4,12 @@ from src.core.events import EventBus, Event
 from src.core.logging import logger
 
 
-class MotorController:
+class Commander:
     def __init__(self, bus: EventBus) -> None:
         #TODO set up jetbot api
         self._bus = bus
 
-    async def __aenter__(self) -> "MotorController":
+    async def __aenter__(self) -> "Commander":
         self._bus.subscribe("drive/set_velocity", self._apply_velocity)
         logger.info("MotorController started")
         return self
