@@ -7,12 +7,15 @@ from src.safety.collision_avoidance import CollisionAvoidanceDaemon
 from src.perception.yolo_inference import YoloInference
 
 
-class Controller:
+class Commander:
     # Mix in the command from random walk, safety, YOLO, then publish to drive/set_velocity
     def __init__(self, bus: EventBus, random_walk : RandomWalkDaemon, safety: CollisionAvoidanceDaemon, yolo: YoloInference) -> None:
         self._bus = bus
+        self._random_walk = random_walk
+        self._safety = safety
+        self._yolo = yolo
 
-    async def __aenter__(self) -> "Controller":
+    async def __aenter__(self) -> "Commander":
         # self._bus.subscribe("drive/set_velocity", self._apply_velocity)
         logger.info("MotorController started")
         return self
