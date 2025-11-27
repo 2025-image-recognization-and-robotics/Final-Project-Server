@@ -28,8 +28,24 @@ async def run_app() -> None:
     image_server = ImageServer(cfg, bus)
     random_walk = RandomWalkDaemon(bus)
     collision = CollisionAvoidanceDaemon(bus)
-    yolo = YoloInference("",bus)
-    commander = Commander(bus, random_walk, collision, None)
+
+    # 1. (來自 yolov8.py) 定義你要偵測的目標類別
+    target_classes_list = [
+        "handbag", "remote", "bottle", "cup", "laptop",
+        "mouse", "cell phone", "wallet", "scissors", "book"
+    ]
+
+    # 2. 使用 config.py 中的設定來初始化 YOLO
+    yolo = YoloInference(
+        model_path=cfg.yolo_model,  # 來自 config
+        bus=bus,
+        device=cfg.yolo_device,  # 來自 config
+        target_classes=target_classes_list,  # 傳入你要過濾的類別
+        conf_threshold=0.5  # 你可以自行調整此閾值
+    )
+
+    # 3. (修改) 將 yolo 實例傳遞給 Commander
+    commander = Commander(bus, random_walk, collision, yolo)
 
     # Cooperative shutdown handling
     stop_event = asyncio.Event()
@@ -46,11 +62,15 @@ async def run_app() -> None:
             print("Windows without ProactorEventLoop can't set signal handlers; fallback")
 
     async with AsyncExitStack() as stack:
-        # Ensure the event bus dispatcher is running
+        # 確保所有服務都被 AsyncExitStack 管理
         await stack.enter_async_context(bus)
         await stack.enter_async_context(image_server)
         await stack.enter_async_context(collision)
         await stack.enter_async_context(random_walk)
+
+        # --- MODIFIED: 確保 YOLO 服務也被啟動 ---
+        await stack.enter_async_context(yolo)
+
         await stack.enter_async_context(commander)
 
         logger.info("Services started; awaiting stop event")
