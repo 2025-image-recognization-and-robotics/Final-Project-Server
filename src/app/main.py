@@ -37,10 +37,11 @@ async def run_app() -> None:
 
     # 2. 使用 config.py 中的設定來初始化 YOLO
     yolo = YoloInference(
-        model_path=cfg.yolo_model,  # 來自 config
+        model_path="yolov8s.pt",  # 來自 config
         bus=bus,
         device=cfg.yolo_device,  # 來自 config
         target_classes=target_classes_list,  # 傳入你要過濾的類別
+        #target_classes=None,
         conf_threshold=0.5  # 你可以自行調整此閾值
     )
 
