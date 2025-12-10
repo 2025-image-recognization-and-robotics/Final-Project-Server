@@ -26,7 +26,7 @@ class AppConfig(BaseModel):
 
     worker_threads: int = 2
 
-    yolo_model: str = "yolo12n.pt"
+    yolo_model: str = "best.pt"
     yolo_device: str = "cpu"
 
     @classmethod
@@ -39,7 +39,7 @@ class AppConfig(BaseModel):
             app_port=int(os.getenv("APP_PORT", getattr(cls, 'app_port', 8080))),
             transport=os.getenv("TRANSPORT", getattr(cls, 'transport', "tcp")),
             worker_threads=int(os.getenv("WORKER_THREADS", getattr(cls, 'worker_threads', 2))),
-            yolo_model=os.getenv("YOLO_MODEL", getattr(cls, 'yolo_model', "yolo12n.pt")),
+            yolo_model=os.getenv("YOLO_MODEL", getattr(cls, 'yolo_model', "best.pt")),
             yolo_device=os.getenv("YOLO_DEVICE", getattr(cls, 'yolo_device', "cpu")),
         )
         try:
