@@ -71,6 +71,7 @@ class ImageServer:
                     type="image_received",
                     payload={"bytes": data, "from": addr}
                 ))
+                
 
         except asyncio.IncompleteReadError:
             logger.info(f"[ImageServer] Client disconnected: {addr}")
