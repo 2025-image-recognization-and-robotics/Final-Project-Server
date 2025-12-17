@@ -35,3 +35,4 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
             self.command =None
             logger.info("RandomWalk: step")
             await asyncio.sleep(0.5)
+            
