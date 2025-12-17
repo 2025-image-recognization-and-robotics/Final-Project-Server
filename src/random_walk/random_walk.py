@@ -34,7 +34,4 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
             # TODO: set random walk algo to self.command
             self.command =None
             logger.info("RandomWalk: step")
-
-            
-            
-            await asyncio.sleep(1)  # Adjust the sleep time as needed
+            await asyncio.sleep(0.5)
