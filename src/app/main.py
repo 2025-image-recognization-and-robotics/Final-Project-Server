@@ -28,7 +28,7 @@ async def run_app() -> None:
     image_server = ImageServer(cfg, bus)
     random_walk = RandomWalkDaemon(bus)
     collision = CollisionAvoidanceDaemon(bus)
-
+    controller = Controller(cfg,bus)
     # 1. (來自 yolov8.py) 定義你要偵測的目標類別
     target_classes_list = [
         "handbag", "remote", "bottle", "cup", "laptop",
@@ -64,6 +64,7 @@ async def run_app() -> None:
 
     async with AsyncExitStack() as stack:
         # 確保所有服務都被 AsyncExitStack 管理
+        await stack.enter_async_context(controller)
         await stack.enter_async_context(bus)
         await stack.enter_async_context(image_server)
         await stack.enter_async_context(collision)

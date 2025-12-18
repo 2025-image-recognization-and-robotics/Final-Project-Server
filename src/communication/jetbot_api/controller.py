@@ -1,24 +1,86 @@
 from __future__ import annotations
 
+import socket
+import json
+import time
+from src.core.config import AppConfig
 from src.core.events import EventBus, Event
 from src.core.logging import logger
 
 
 class Controller:
-    def __init__(self, bus: EventBus) -> None:
-        #TODO set up jetbot api 謙
+    """PC端控制器：長連線版本"""
+
+    def __init__(self, cfg: AppConfig, bus: EventBus) -> None:
+        self._cfg = cfg
         self._bus = bus
+        self._sock: socket.socket | None = None
+        self._jetbot = "192.168.209.189"
+        self._port = 8081
 
     async def __aenter__(self) -> "Controller":
         self._bus.subscribe("drive/set_velocity", self._apply_velocity)
-        logger.info("MotorController started")
+        logger.info("✅ Controller (persistent mode) started")
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
-        logger.info("MotorController stopped")
+        self._close()
+        logger.info("[Controller] stopped")
 
-    # Hardware integration point
+    # =======================
+    # Connection management
+    # =======================
+    def _connect(self) -> None:
+        """建立或重建連線"""
+        if self._sock is not None:
+            return
+
+        while True:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(3)
+                logger.info(f"🔌 Connecting to JetBot {self._jetbot}:{self._port} ...")
+                s.connect((self._jetbot, self._port))
+                s.settimeout(None)
+                self._sock = s
+                logger.info("✅ Connected to JetBot")
+                break
+            except Exception as e:
+                logger.error(f"❌ Connect failed: {e}")
+                time.sleep(1)
+
+    def _close(self) -> None:
+        if self._sock:
+            try:
+                self._sock.close()
+            except Exception:
+                pass
+            self._sock = None
+
+    # =======================
+    # Send command
+    # =======================
     def _apply_velocity(self, event: Event) -> None:
-        # TODO: call JetBot motor APIs here (e.g., set_motor_speeds(left, right)) 謙
-        if self._bus:
-            pass
+        data = event.payload or {}
+        left = float(data.get("left", 0.0))
+        right = float(data.get("right", 0.0))
+
+        left = max(-1.0, min(1.0, left))
+        right = max(-1.0, min(1.0, right))
+
+        cmd = {"left": left, "right": right}
+        self._send(cmd)
+
+    def _send(self, cmd: dict) -> None:
+        try:
+            if self._sock is None:
+                self._connect()
+
+            # 加換行，避免黏包問題
+            msg = json.dumps(cmd) + "\n"
+            self._sock.sendall(msg.encode())
+            logger.info(f"🎮 Sent: {msg.strip()}")
+
+        except Exception as e:
+            logger.error(f"❌ Send failed: {e}")
+            self._close()
