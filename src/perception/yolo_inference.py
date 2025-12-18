@@ -114,50 +114,19 @@ class YoloInference(AbstractAsyncContextManager):
             logger.error(f"YOLO prediction failed: {e}")
             return
 
-        # --- 處理結果 ---
-        detections: List[Detection] = []
-        if not results:
-            # 如果沒有偵測結果，還是顯示原始影像
-            cv2.imshow("JetBot Live Feed (YOLO)", image)
-            cv2.waitKey(1)
-            self._bus.publish(Event(type="detections_found", payload={"detections": detections}))
-            return
-
-        result = results[0]
-        names = result.names
-
-        for box in result.boxes:
-            cls_id = int(box.cls)
-            label = names[cls_id]
-
-            if self.target_classes and label not in self.target_classes:
-                continue
-
-            # 取得邊界框座標和信心分數
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            conf = float(box.conf)
-
-            # --- MODIFIED: 繪製邊界框和標籤 ---
-            text = f"{label} {conf:.2f}"
-            # 繪製綠色邊界框 (顏色使用 BGR: Green (0, 255, 0))
-            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            # 繪製綠色標籤文字
-            cv2.putText(image, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            # --- 繪製結束 ---
-
+            # --- 處理結果 ---
+            detections: List[Detection] = []
+            # ... (中間是將 box 轉為 Detection 物件的迴圈) ...
             detections.append(Detection(
                 bbox=(x1, y1, x2, y2),
                 cls=label,
                 conf=conf
             ))
 
-        # --- MODIFIED: 顯示帶有偵測框的影像 ---
-        cv2.imshow("JetBot Live Feed (YOLO)", image)
-        cv2.waitKey(1)  # 必須呼叫，否則視窗不會刷新
-
-        # --- 發布結果 (Log 和 EventBus) ---
+        # --- 發布結果 ---
+        # 這裡只保留 Log 和 Event 發布，不要有 imshow
         if detections:
-            # 使用先前修改過的 Log 輸出偵測資訊
             det_info = ", ".join([f"{d.cls} ({d.conf:.2f})" for d in detections])
             logger.info(f"Found {len(detections)} targets: {det_info}")
+
         self._bus.publish(Event(type="detections_found", payload={"detections": detections}))

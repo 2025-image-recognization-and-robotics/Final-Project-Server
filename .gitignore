@@ -36,3 +36,8 @@ htmlcov/
 # OS
 Thumbs.db
 
+# YOLO Model Weights
+*.pt
+*.onnx
+*.weights
+runs/
