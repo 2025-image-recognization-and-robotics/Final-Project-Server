@@ -60,3 +60,9 @@ Use environment variables or an `.env` file (see `.env.example`). Key settings:
 - Implementation files contain scaffolding and interfaces only.
 - Replace placeholders with real model loading (YOLOv5/YOLOv8/etc.) and JetBot SDK integration.
 
+## Debugging / Testing
+To run the server with a live video feed window:
+`python run_test.py`
+
+## Model
+The `yolov8n.pt` model will be downloaded automatically.
