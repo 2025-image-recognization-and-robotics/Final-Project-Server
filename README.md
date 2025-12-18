@@ -65,4 +65,5 @@ To run the server with a live video feed window:
 `python run_test.py`
 
 ## Model
+Please `pip install -r requirements.txt`
 The `yolov8n.pt` model will be downloaded automatically.
