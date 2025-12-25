@@ -16,6 +16,7 @@ from src.communication.image_receiver.server import ImageServer
 from src.random_walk.random_walk import RandomWalkDaemon
 from src.safety.collision_avoidance import CollisionAvoidanceDaemon
 from src.perception.yolo_inference import YoloInference
+from src.navigation.object_tracker import ObjectTracker
 
 
 async def run_app() -> None:
@@ -29,6 +30,7 @@ async def run_app() -> None:
     random_walk = RandomWalkDaemon(bus)
     collision = CollisionAvoidanceDaemon(bus)
     controller = Controller(cfg,bus)
+    tracker = ObjectTracker(bus)
     # 1. (來自 yolov8.py) 定義你要偵測的目標類別
     target_classes_list = [
         "handbag", "remote", "bottle", "cup", "laptop",
@@ -46,7 +48,7 @@ async def run_app() -> None:
     )
 
     # 3. (修改) 將 yolo 實例傳遞給 Commander
-    commander = Commander(bus, random_walk, collision, yolo)
+    commander = Commander(bus, random_walk, collision, yolo, tracker)
 
     # Cooperative shutdown handling
     stop_event = asyncio.Event()
