@@ -13,14 +13,16 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
     """Moves the robot randomly until a stop signal is received."""
 
     def __init__(self, bus: EventBus) -> None:
-        self.command = None #TODO: command data structure 謙
+        self.command = None
         self._bus = bus
         self._task: Optional[asyncio.Task] = None
 
         self.forward_speed = 0.3    # 直走速度
-        self.turn_speed = 0.35      # 轉向速度
+        self.turn_speed = 0.1      # 轉向速度
         self.min_move_time = 1.0    # 最小直走時間
         self.max_move_time = 2.0    # 最大直走時間
+
+        self.seconds_per_degree = 0.0105
 
     async def __aenter__(self):
         self._task = asyncio.create_task(self._run())
@@ -49,6 +51,33 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
         event = Event("drive/set_velocity", payload)
         await self._bus.publish(event)
 
+    async def turn_by_angle(self, degree: float):
+        """
+        原地旋轉特定角度
+        degree > 0: 左轉
+        degree < 0: 右轉
+        """
+        if degree == 0: return
+
+        # 計算需要轉多久
+        duration = abs(degree) * self.seconds_per_degree
+        logger.info(f"🔄 Rotating {degree} degrees (Duration: {duration:.2f}s)")
+
+        # 判斷方向
+        if degree > 0:
+            # 左轉：左輪後退，右輪前進 
+            await self._publish_command(-self.turn_speed, self.turn_speed)
+        else:
+            # 右轉：左輪前進，右輪後退
+            await self._publish_command(self.turn_speed, -self.turn_speed)
+
+        # 等待旋轉時間
+        await asyncio.sleep(duration)
+
+        # 停止
+        await self._publish_command(0.0, 0.0)
+        await asyncio.sleep(0.5) # 稍微停頓消除慣性
+
     async def _run(self):
         logger.info("RandomWalk started")
         try:
@@ -56,32 +85,20 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
             await asyncio.sleep(2)
 
             while True:
-                # --- 階段 1: 直走 (Forward) ---
-                duration = random.uniform(self.min_move_time, self.max_move_time)
-                logger.info(f"RW: Forward ({duration:.1f}s)")
-                
-                # 發佈直走指令
-                await self._publish_command(self.forward_speed, self.forward_speed)
-                await asyncio.sleep(duration)
+                # 測試 A: 左轉 90 度
+                logger.info("Test: Left 90")
+                await self.turn_by_angle(90)
+                await asyncio.sleep(1)
 
-                # --- 階段 2: 停頓 (Stop) ---
-                await self._publish_command(0.0, 0.0)
-                await asyncio.sleep(0.5)
+                # 測試 B: 右轉 90 度 (應該要轉回原本方向)
+                logger.info("Test: Right 90")
+                await self.turn_by_angle(-90)
+                await asyncio.sleep(1)
 
-                # --- 階段 3: 隨機轉向 (Turn) ---
-                if random.choice([True, False]):
-                    logger.info("RW: Turn Left")
-                    await self._publish_command(-self.turn_speed, self.turn_speed)
-                else:
-                    logger.info("RW: Turn Right")
-                    await self._publish_command(self.turn_speed, -self.turn_speed)
-                
-                turn_duration = random.uniform(0.4, 0.8)
-                await asyncio.sleep(turn_duration)
-
-                # --- 階段 4: 轉完後停頓 ---
-                await self._publish_command(0.0, 0.0)
-                await asyncio.sleep(0.5)
+                # 測試 C: 180 度大迴旋
+                logger.info("Test: 180 Turn")
+                await self.turn_by_angle(180)
+                await asyncio.sleep(2)
 
         except asyncio.CancelledError:
             logger.info("RandomWalk task cancelled")
