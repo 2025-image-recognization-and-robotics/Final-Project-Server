@@ -13,7 +13,6 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
     """Moves the robot randomly until a stop signal is received."""
 
     def __init__(self, bus: EventBus) -> None:
-        self.command = None
         self._bus = bus
         self._task: Optional[asyncio.Task] = None
 
