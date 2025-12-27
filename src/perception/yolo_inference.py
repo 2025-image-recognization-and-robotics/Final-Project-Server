@@ -34,6 +34,8 @@ class YoloInference(AbstractAsyncContextManager):
         self._yolo: YOLO | None = None
         self.target_classes = target_classes
         self.conf_threshold = conf_threshold
+        self.detected = False
+        self._command = (0.0, 0.0)  # left, right
         logger.info(f"YoloInference initialized with model: {model_path}")
 
     async def __aenter__(self) -> "YoloInference":
