@@ -29,13 +29,10 @@ class Commander:
         while True:
 
             if not self._yolo.detected:
-                left = self._random_walk.command[0]
-                right = self._random_walk.command[1]
+                payload = self._random_walk.command
             else:
-                left = self._yolo.command[0]
-                right = self._yolo.command[1]
+                payload = self._yolo.command
 
-            payload = {"left": left, "right": right}
             event = Event("drive/set_velocity", payload)
             await self._bus.publish(event)
             await asyncio.sleep(0.1)
