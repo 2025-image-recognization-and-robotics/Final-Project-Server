@@ -50,7 +50,7 @@ class YoloInference(AbstractAsyncContextManager):
             self._yolo = YOLO(self._model_path)
             # 預熱模型
             dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
-            self._yolo.predict(dummy_img, device=self.device, verbose=False)
+            self._yolo.predict(dummy_img, device=self._device, verbose=False)
             logger.info("YOLO model loaded and warmed up.")
         except Exception as e:
             logger.error(f"Failed to load YOLO model: {e}")
@@ -90,8 +90,8 @@ class YoloInference(AbstractAsyncContextManager):
                 lambda: self._yolo.predict(
                     source=image,
                     imgsz=640,
-                    conf=self.conf_threshold,
-                    device=self.device,
+                    conf=self._conf_threshold,
+                    device=self._device,
                     verbose=False
                 )
             )
@@ -112,7 +112,7 @@ class YoloInference(AbstractAsyncContextManager):
                 label = names[cls_id]
 
                 # 過濾類別
-                if self.target_classes and label not in self.target_classes:
+                if self._target_classes and label not in self._target_classes:
                     continue
 
                 detections.append(Detection(
