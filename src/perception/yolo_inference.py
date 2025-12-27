@@ -29,21 +29,25 @@ class YoloInference(AbstractAsyncContextManager):
             conf_threshold: float = 0.5,
             image_size: tuple[int, int] = (480, 640)
     ) -> None:
-        self.model_path = model_path
-        self.device = device
+        self._model_path = model_path
+        self._device = device
         self._bus = bus
         self._yolo: YOLO | None = None
-        self.target_classes = target_classes
-        self.conf_threshold = conf_threshold
+        self._target_classes = target_classes
+        self._target = ""
+        self._conf_threshold = conf_threshold
+        self._image_size = image_size
         self.detected = False
-        self.image_size = image_size
         self.command = {"left": 0.0, "right": 0.0}
         logger.info(f"YoloInference initialized with model: {model_path}")
+    def set_target(self, target: str) -> None:
+        self._target = target
+        logger.info(f"YoloInference target set to: {target}")
 
     async def __aenter__(self) -> "YoloInference":
-        logger.info(f"Loading YOLO model from {self.model_path}...")
+        logger.info(f"Loading YOLO model from {self._model_path}...")
         try:
-            self._yolo = YOLO(self.model_path)
+            self._yolo = YOLO(self._model_path)
             # 預熱模型
             dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
             self._yolo.predict(dummy_img, device=self.device, verbose=False)
