@@ -43,7 +43,7 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
 
     async def _publish_command(self, left: float, right: float):
         payload = {"left": left, "right": right}
-        event = Event("drive/set_velocity", payload)
+        event = Event("random_walk/set_velocity", payload)
         await self._bus.publish(event)
 
     async def turn_by_angle(self, degree: float):
