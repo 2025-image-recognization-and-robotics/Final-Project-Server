@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from ultralytics import cfg
+
 # Optional dependencies: provide light fallbacks so imports don't fail in bare envs
 try:
     from pydantic import BaseModel  # type: ignore
@@ -25,7 +27,8 @@ class AppConfig(BaseModel):
     transport: str = "tcp"  # tcp|udp|ws (planned)
 
     worker_threads: int = 2
-
+    img_height = 480
+    img_width = 640
     yolo_model: str = "best.pt"
     yolo_device: str = "cpu"
 
@@ -41,6 +44,8 @@ class AppConfig(BaseModel):
             worker_threads=int(os.getenv("WORKER_THREADS", getattr(cls, 'worker_threads', 2))),
             yolo_model=os.getenv("YOLO_MODEL", getattr(cls, 'yolo_model', "best.pt")),
             yolo_device=os.getenv("YOLO_DEVICE", getattr(cls, 'yolo_device', "cpu")),
+            img_height=os.getenv("IMG_HEIGHT", getattr(cls, 'img_height', 480)),
+            img_width=os.getenv("IMG_WIDTH", getattr(cls, 'img_width', 640)),
         )
         try:
             return cls(**kwargs)  # type: ignore[arg-type]

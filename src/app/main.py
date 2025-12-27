@@ -42,7 +42,8 @@ async def run_app() -> None:
         device=cfg.yolo_device,  # 來自 config
         target_classes=target_classes_list,  # 傳入你要過濾的類別
         #target_classes=None,
-        conf_threshold=0.5  # 你可以自行調整此閾值
+        conf_threshold=0.5,  # 你可以自行調整此閾值
+        image_size = (cfg.img_width, cfg.img_height)
     )
 
     # 3. (修改) 將 yolo 實例傳遞給 Commander

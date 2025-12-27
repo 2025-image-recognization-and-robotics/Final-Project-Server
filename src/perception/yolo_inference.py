@@ -26,7 +26,8 @@ class YoloInference(AbstractAsyncContextManager):
             bus: EventBus,
             device: str = "gpu",
             target_classes: List[str] | None = None,
-            conf_threshold: float = 0.5
+            conf_threshold: float = 0.5,
+            image_size: tuple[int, int] = (480, 640)
     ) -> None:
         self.model_path = model_path
         self.device = device
@@ -35,7 +36,8 @@ class YoloInference(AbstractAsyncContextManager):
         self.target_classes = target_classes
         self.conf_threshold = conf_threshold
         self.detected = False
-        self._command = (0.0, 0.0)  # left, right
+        self.image_size = image_size
+        self.command = {"left": 0.0, "right": 0.0}
         logger.info(f"YoloInference initialized with model: {model_path}")
 
     async def __aenter__(self) -> "YoloInference":
