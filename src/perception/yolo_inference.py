@@ -118,4 +118,4 @@ class YoloInference(AbstractAsyncContextManager):
             det_info = ", ".join([f"{d.cls} ({d.conf:.2f})" for d in detections])
             logger.info(f"Found {len(detections)} targets: {det_info}")
 
-        self._bus.publish(Event(type="detections_found", payload={"detections": detections}))
+        await self._bus.publish(Event(type="detections_found", payload={"detections": detections}))

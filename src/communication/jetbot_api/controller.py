@@ -15,7 +15,7 @@ class Controller:
         self._cfg = cfg
         self._bus = bus
         self._sock: socket.socket | None = None
-        self._jetbot = "192.168.209.189"
+        self._jetbot = "172.20.10.9"
         self._port = 8081
 
     async def __aenter__(self) -> "Controller":
