@@ -26,23 +26,31 @@ class YoloInference(AbstractAsyncContextManager):
             bus: EventBus,
             device: str = "gpu",
             target_classes: List[str] | None = None,
-            conf_threshold: float = 0.5
+            conf_threshold: float = 0.5,
+            image_size: tuple[int, int] = (480, 640)
     ) -> None:
-        self.model_path = model_path
-        self.device = device
+        self._model_path = model_path
+        self._device = device
         self._bus = bus
         self._yolo: YOLO | None = None
-        self.target_classes = target_classes
-        self.conf_threshold = conf_threshold
+        self._target_classes = target_classes
+        self._target = ""
+        self._conf_threshold = conf_threshold
+        self._image_size = image_size
+        self.detected = False
+        self.command = {"left": 0.0, "right": 0.0}
         logger.info(f"YoloInference initialized with model: {model_path}")
+    def set_target(self, target: str) -> None:
+        self._target = target
+        logger.info(f"YoloInference target set to: {target}")
 
     async def __aenter__(self) -> "YoloInference":
-        logger.info(f"Loading YOLO model from {self.model_path}...")
+        logger.info(f"Loading YOLO model from {self._model_path}...")
         try:
-            self._yolo = YOLO(self.model_path)
+            self._yolo = YOLO(self._model_path)
             # 預熱模型
             dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
-            self._yolo.predict(dummy_img, device=self.device, verbose=False)
+            self._yolo.predict(dummy_img, device=self._device, verbose=False)
             logger.info("YOLO model loaded and warmed up.")
         except Exception as e:
             logger.error(f"Failed to load YOLO model: {e}")
@@ -82,8 +90,8 @@ class YoloInference(AbstractAsyncContextManager):
                 lambda: self._yolo.predict(
                     source=image,
                     imgsz=640,
-                    conf=self.conf_threshold,
-                    device=self.device,
+                    conf=self._conf_threshold,
+                    device=self._device,
                     verbose=False
                 )
             )
@@ -104,7 +112,7 @@ class YoloInference(AbstractAsyncContextManager):
                 label = names[cls_id]
 
                 # 過濾類別
-                if self.target_classes and label not in self.target_classes:
+                if self._target_classes and label not in self._target_classes:
                     continue
 
                 detections.append(Detection(
@@ -118,4 +126,4 @@ class YoloInference(AbstractAsyncContextManager):
             det_info = ", ".join([f"{d.cls} ({d.conf:.2f})" for d in detections])
             logger.info(f"Found {len(detections)} targets: {det_info}")
 
-        self._bus.publish(Event(type="detections_found", payload={"detections": detections}))
+        await self._bus.publish(Event(type="detections_found", payload={"detections": detections}))

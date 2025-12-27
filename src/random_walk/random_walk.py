@@ -25,6 +25,7 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
         self.seconds_per_degree = 0.0105 # 每度所需時間 (經實測校正)
 
         self.last_turn_side = 0
+        self.command = {"left": 0.0, "right": 0.0}  # left, right
 
     async def __aenter__(self):
         self._task = asyncio.create_task(self._run())
@@ -42,9 +43,8 @@ class RandomWalkDaemon(AbstractAsyncContextManager):
         logger.info("RandomWalk stopped")
 
     async def _publish_command(self, left: float, right: float):
-        payload = {"left": left, "right": right}
-        event = Event("drive/set_velocity", payload)
-        await self._bus.publish(event)
+        self.command["left"] = left
+        self.command["right"] = right
 
     async def turn_by_angle(self, degree: float):
         """原地旋轉特定角度"""
