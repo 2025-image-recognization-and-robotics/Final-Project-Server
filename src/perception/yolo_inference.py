@@ -35,7 +35,7 @@ class YoloInference(AbstractAsyncContextManager):
         self._bus = bus
         self._yolo: YOLO | None = None
         self._target_classes = target_classes
-        self._target = "person"
+        self._target = ""
         self._conf_threshold = conf_threshold
         self._image_size = image_size
 
