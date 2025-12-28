@@ -104,26 +104,32 @@ class YoloInference(AbstractAsyncContextManager):
         if results:
             result = results[0]
             names = result.names
-            for box in result.boxes:
-                # 取得座標與資訊
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                conf = float(box.conf)
-                cls_id = int(box.cls)
-                label = names[cls_id]
-
-                # 過濾類別
-                if self._target_classes and label not in self._target_classes:
-                    continue
-
-                detections.append(Detection(
-                    bbox=(x1, y1, x2, y2),
-                    cls=label,
-                    conf=conf
-                ))
-
-        # 4. 發布結果 (只印 Log，不開視窗)
-        if detections:
-            det_info = ", ".join([f"{d.cls} ({d.conf:.2f})" for d in detections])
-            logger.info(f"Found {len(detections)} targets: {det_info}")
-
-        await self._bus.publish(Event(type="detections_found", payload={"detections": detections}))
+            if self._target in names.items():
+                self.detected = True
+                #perform the logic
+                #save the command in self.command
+            else:
+                self.detected = False
+        #     for box in result.boxes:
+        #         # 取得座標與資訊
+        #         x1, y1, x2, y2 = map(int, box.xyxy[0])
+        #         conf = float(box.conf)
+        #         cls_id = int(box.cls)
+        #         label = names[cls_id]
+        #
+        #         # 過濾類別
+        #         if self._target_classes and label not in self._target_classes:
+        #             continue
+        #
+        #         detections.append(Detection(
+        #             bbox=(x1, y1, x2, y2),
+        #             cls=label,
+        #             conf=conf
+        #         ))
+        #
+        # # 4. 發布結果 (只印 Log，不開視窗)
+        # if detections:
+        #     det_info = ", ".join([f"{d.cls} ({d.conf:.2f})" for d in detections])
+        #     logger.info(f"Found {len(detections)} targets: {det_info}")
+        #
+        # await self._bus.publish(Event(type="detections_found", payload={"detections": detections}))
