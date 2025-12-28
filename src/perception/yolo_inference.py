@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 import asyncio
 import cv2
 import numpy as np
@@ -27,19 +28,29 @@ class YoloInference(AbstractAsyncContextManager):
             device: str = "gpu",
             target_classes: List[str] | None = None,
             conf_threshold: float = 0.5,
-            image_size: tuple[int, int] = (480, 640)
+            image_size: tuple[int, int] = (480, 640)  # Height, Width
     ) -> None:
         self._model_path = model_path
         self._device = device
         self._bus = bus
         self._yolo: YOLO | None = None
         self._target_classes = target_classes
-        self._target = ""
+        self._target = "person"
         self._conf_threshold = conf_threshold
         self._image_size = image_size
+
+        # Control Logic Parameters (Integrated from ObjectTracker)
+        self.stop_threshold = 0.35
+        self.slow_threshold = 0.20
+        self.center_deadzone = 200.0
+        # Calculate center based on image width (index 1)
+        self.image_center_x = image_size[1] / 2.0
+        self.image_height = float(image_size[0])
+
         self.detected = False
         self.command = {"left": 0.0, "right": 0.0}
         logger.info(f"YoloInference initialized with model: {model_path}")
+
     def set_target(self, target: str) -> None:
         self._target = target
         logger.info(f"YoloInference target set to: {target}")
@@ -63,13 +74,33 @@ class YoloInference(AbstractAsyncContextManager):
     async def __aexit__(self, exc_type, exc, tb) -> None:
         logger.info("YoloInference stopped")
         self._yolo = None
-        # 移除 cv2.destroyAllWindows()，讓測試腳本或 main 自己決定何時關閉
+
+    def _calculate_velocity(self, offset: float, dist_score: float) -> Tuple[float, float]:
+        """
+        Calculates motor commands based on visual offset and distance.
+        """
+        # [Priority 1] Adjust Angle (Turning)
+        logger.info(f"{offset}")
+        if offset > self.center_deadzone:
+            return 0.1, -0.1  # Turn Right
+        elif offset < -self.center_deadzone:
+            return -0.1, 0.1  # Turn Left
+
+        # [Priority 2] Adjust Distance (Forward/Stop)
+        else:
+            return 0.15, 0.15  # Slow Down
+            if dist_score < self.slow_threshold:
+                return 0.25, 0.25  # Full Speed
+            elif dist_score < self.stop_threshold:
+                return 0.15, 0.15  # Slow Down
+            else:
+                return 0.0, 0.0  # Stop (Too close)
 
     async def _detect(self, event: Event) -> None:
         if self._yolo is None:
             return
 
-        # 1. 解碼影像
+        # 1. Decode Image
         try:
             image_bytes: bytes | None = event.payload.get("bytes")
             if not image_bytes:
@@ -82,7 +113,7 @@ class YoloInference(AbstractAsyncContextManager):
             logger.error(f"Error decoding image: {e}")
             return
 
-        # 2. 執行推論
+        # 2. Run Inference
         loop = asyncio.get_running_loop()
         try:
             results = await loop.run_in_executor(
@@ -99,17 +130,54 @@ class YoloInference(AbstractAsyncContextManager):
             logger.error(f"YOLO prediction failed: {e}")
             return
 
-        # 3. 處理結果 (修正原本缺少的迴圈)
-        detections: List[Detection] = []
+        # 3. Process Results
+        target_detections: List[Detection] = []
+
         if results:
             result = results[0]
             names = result.names
-            if self._target in names.items():
+            # Parse boxes to find our specific target
+            for box in result.boxes:
+
+                cls_id = int(box.cls)
+                cls_name = result.names[cls_id]
+                logger.info(f"Found {cls_name}")
+
+                # Filter only for the currently set target
+                if cls_name == self._target:
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    conf = float(box.conf[0])
+                    target_detections.append(Detection((x1, y1, x2, y2), cls_name, conf))
+
+
+            if target_detections:
                 self.detected = True
-                #perform the logic
-                #save the command in self.command
+
+                # Logic Step A: Find the largest target (closest)
+                # Area = (x2 - x1) * (y2 - y1)
+                target = max(target_detections, key=lambda d: (d.bbox[2] - d.bbox[0]) * (d.bbox[3] - d.bbox[1]))
+
+                # Logic Step B: Calculate Features
+                x1, y1, x2, y2 = target.bbox
+                center_x = (x1 + x2) / 2
+                height = y2 - y1
+
+                offset = center_x - self.image_center_x
+                dist_score = height / self.image_height
+
+                # Logic Step C: Calculate Command
+                left_vel, right_vel = self._calculate_velocity(offset, dist_score)
+
+                # Save command
+                self.command = {"left": left_vel, "right": right_vel}
+
             else:
                 self.detected = False
+                self.command = {"left": 0.0, "right": 0.0}
+        else:
+            # No results at all
+            self.detected = False
+            self.command = {"left": 0.0, "right": 0.0}
         #     for box in result.boxes:
         #         # 取得座標與資訊
         #         x1, y1, x2, y2 = map(int, box.xyxy[0])
