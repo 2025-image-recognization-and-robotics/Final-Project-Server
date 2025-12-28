@@ -54,7 +54,6 @@ class ImageServer:
 
         try:
             while True:
-                await asyncio.sleep(0.2)
                 # 1) read 4-byte big-endian length prefix
                 header = await reader.readexactly(4)
                 length = int.from_bytes(header, "big")
