@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 import asyncio
 import cv2
 import numpy as np
