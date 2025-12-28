@@ -36,7 +36,8 @@ class YoloInference(AbstractAsyncContextManager):
         self._target_classes = target_classes
         self._target = ""
         self._conf_threshold = conf_threshold
-        self._image_size = image_size
+        self._image_area = image_size[0] * image_size[1]
+
 
         # Control Logic Parameters (Integrated from ObjectTracker)
         self.stop_threshold = 0.35
@@ -74,7 +75,7 @@ class YoloInference(AbstractAsyncContextManager):
         logger.info("YoloInference stopped")
         self._yolo = None
 
-    def _calculate_velocity(self, offset: float, dist_score: float) -> Tuple[float, float]:
+    def _calculate_velocity(self, offset: float, area: float) -> Tuple[float, float]:
         """
         Calculates motor commands based on visual offset and distance.
         """
@@ -87,10 +88,7 @@ class YoloInference(AbstractAsyncContextManager):
 
         # [Priority 2] Adjust Distance (Forward/Stop)
         else:
-            return 0.15, 0.15  # Slow Down
-            if dist_score < self.slow_threshold:
-                return 0.25, 0.25  # Full Speed
-            elif dist_score < self.stop_threshold:
+            if area < self._image_area / 2:
                 return 0.15, 0.15  # Slow Down
             else:
                 return 0.0, 0.0  # Stop (Too close)
@@ -153,7 +151,7 @@ class YoloInference(AbstractAsyncContextManager):
                 self.detected = True
 
                 # Logic Step A: Find the largest target (closest)
-                # Area = (x2 - x1) * (y2 - y1)
+                area = (x2 - x1) * (y2 - y1)
                 target = max(target_detections, key=lambda d: (d.bbox[2] - d.bbox[0]) * (d.bbox[3] - d.bbox[1]))
 
                 # Logic Step B: Calculate Features
@@ -162,10 +160,10 @@ class YoloInference(AbstractAsyncContextManager):
                 height = y2 - y1
 
                 offset = center_x - self.image_center_x
-                dist_score = height / self.image_height
+                # dist_score = height / self.image_height
 
                 # Logic Step C: Calculate Command
-                left_vel, right_vel = self._calculate_velocity(offset, dist_score)
+                left_vel, right_vel = self._calculate_velocity(offset, area)
 
                 # Save command
                 self.command = {"left": left_vel, "right": right_vel}
