@@ -16,6 +16,7 @@ from src.communication.image_receiver.server import ImageServer
 from src.random_walk.random_walk import RandomWalkDaemon
 from src.safety.collision_avoidance import CollisionAvoidanceDaemon
 from src.perception.yolo_inference import YoloInference
+from src.app.gui import SimpleTargetSelector
 
 
 async def run_app() -> None:
@@ -32,7 +33,7 @@ async def run_app() -> None:
     # 1. (來自 yolov8.py) 定義你要偵測的目標類別
     target_classes_list = [
         "handbag", "remote", "bottle", "cup", "laptop",
-        "mouse", "cell phone", "wallet", "scissors", "book"
+        "mouse", "cell phone", "wallet", "scissors", "book", "person"
     ]
 
     # 2. 使用 config.py 中的設定來初始化 YOLO
@@ -45,6 +46,10 @@ async def run_app() -> None:
         conf_threshold=0.5,  # 你可以自行調整此閾值
         image_size = (cfg.img_width, cfg.img_height)
     )
+
+    # Start a small GUI to set the detection target
+    gui = SimpleTargetSelector(yolo, target_classes_list)
+    gui.start()
 
     # 3. (修改) 將 yolo 實例傳遞給 Commander
     commander = Commander(bus, random_walk, collision, yolo)
@@ -79,6 +84,12 @@ async def run_app() -> None:
         logger.info("Services started; awaiting stop event")
         await stop_event.wait()
         logger.info("Stopping services...")
+
+        # Stop GUI when shutting down
+        try:
+            gui.stop()
+        except Exception:
+            pass
 
 
 def main() -> None:
