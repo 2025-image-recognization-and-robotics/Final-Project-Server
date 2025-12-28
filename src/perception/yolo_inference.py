@@ -141,7 +141,7 @@ class YoloInference(AbstractAsyncContextManager):
 
                 cls_id = int(box.cls)
                 cls_name = result.names[cls_id]
-                logger.info(f"Found {cls_name}")
+                # logger.info(f"Found {cls_name}")
 
                 # Filter only for the currently set target
                 if cls_name == self._target:

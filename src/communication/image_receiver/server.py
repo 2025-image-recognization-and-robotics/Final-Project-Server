@@ -65,7 +65,7 @@ class ImageServer:
 
                 # 2) read image data
                 data = await reader.readexactly(length)
-                logger.info(f"[ImageServer] Received {length} bytes from client {addr}")
+                # logger.info(f"[ImageServer] Received {length} bytes from client {addr}")
 
                 # 3) publish event
                 await self._bus.publish(Event(

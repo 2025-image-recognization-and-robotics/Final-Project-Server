@@ -79,7 +79,7 @@ class Controller:
             # 加換行，避免黏包問題
             msg = json.dumps(cmd) + "\n"
             self._sock.sendall(msg.encode())
-            logger.info(f"🎮 Sent: {msg.strip()}")
+            # logger.info(f"🎮 Sent: {msg.strip()}")
 
         except Exception as e:
             logger.error(f"❌ Send failed: {e}")
