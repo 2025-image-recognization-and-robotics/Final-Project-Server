@@ -7,7 +7,7 @@ import asyncio
 import signal
 from contextlib import AsyncExitStack
 
-from src.commander.motor_controller import Commander
+from src.task_manager.motor_controller import Commander
 from src.communication.jetbot_api.controller import Controller
 from src.core.config import AppConfig
 from src.core.logging import setup_logging, logger
