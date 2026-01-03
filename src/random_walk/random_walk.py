@@ -12,8 +12,7 @@ from src.core.logging import logger
 class RandomWalkDaemon(AbstractAsyncContextManager):
     """Moves the robot randomly until a stop signal is received."""
 
-    def __init__(self, bus: EventBus) -> None:
-        self._bus = bus
+    def __init__(self) -> None:
         self._task: Optional[asyncio.Task] = None
 
         self.is_calibration_mode = False # 設定為 True 以啟動校正模式

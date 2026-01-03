@@ -3,16 +3,14 @@ import asyncio
 from src.core.events import EventBus, Event
 from src.core.logging import logger
 from src.random_walk.random_walk import RandomWalkDaemon
-from src.safety.collision_avoidance import CollisionAvoidanceDaemon
 from src.perception.yolo_inference import YoloInference
 
 
 class Commander:
     # Mix in the command from random walk, safety, YOLO, then publish to drive/set_velocity
-    def __init__(self, bus: EventBus, random_walk : RandomWalkDaemon, safety: CollisionAvoidanceDaemon, yolo: YoloInference) -> None:
+    def __init__(self, bus: EventBus, random_walk : RandomWalkDaemon, yolo: YoloInference) -> None:
         self._bus = bus
         self._random_walk = random_walk
-        self._safety = safety
         self._yolo = yolo
 
     async def __aenter__(self) -> "Commander":

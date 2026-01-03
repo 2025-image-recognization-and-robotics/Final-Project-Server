@@ -14,7 +14,6 @@ from src.core.logging import setup_logging, logger
 from src.core.events import EventBus
 from src.communication.image_receiver.server import ImageServer
 from src.random_walk.random_walk import RandomWalkDaemon
-from src.safety.collision_avoidance import CollisionAvoidanceDaemon
 from src.perception.yolo_inference import YoloInference
 from src.app.gui import SimpleTargetSelector
 
@@ -27,8 +26,7 @@ async def run_app() -> None:
 
     bus = EventBus()
     image_server = ImageServer(cfg, bus)
-    random_walk = RandomWalkDaemon(bus)
-    collision = CollisionAvoidanceDaemon(bus)
+    random_walk = RandomWalkDaemon()
     controller = Controller(cfg,bus)
     # 1. (來自 yolov8.py) 定義你要偵測的目標類別
     target_classes_list = [
@@ -52,7 +50,7 @@ async def run_app() -> None:
     gui.start()
 
     # 3. (修改) 將 yolo 實例傳遞給 Commander
-    task_manager = Commander(bus, random_walk, collision, yolo)
+    task_manager = Commander(bus, random_walk, yolo)
 
     # Cooperative shutdown handling
     stop_event = asyncio.Event()
@@ -73,7 +71,6 @@ async def run_app() -> None:
         await stack.enter_async_context(controller)
         await stack.enter_async_context(bus)
         await stack.enter_async_context(image_server)
-        await stack.enter_async_context(collision)
         await stack.enter_async_context(random_walk)
 
         # --- MODIFIED: 確保 YOLO 服務也被啟動 ---
