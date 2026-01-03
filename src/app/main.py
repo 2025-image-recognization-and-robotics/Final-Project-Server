@@ -52,7 +52,7 @@ async def run_app() -> None:
     gui.start()
 
     # 3. (修改) 將 yolo 實例傳遞給 Commander
-    commander = Commander(bus, random_walk, collision, yolo)
+    task_manager = Commander(bus, random_walk, collision, yolo)
 
     # Cooperative shutdown handling
     stop_event = asyncio.Event()
@@ -79,7 +79,7 @@ async def run_app() -> None:
         # --- MODIFIED: 確保 YOLO 服務也被啟動 ---
         await stack.enter_async_context(yolo)
 
-        await stack.enter_async_context(commander)
+        await stack.enter_async_context(task_manager)
 
         logger.info("Services started; awaiting stop event")
         await stop_event.wait()
